@@ -16,7 +16,7 @@ const agent = new BskyAgent({
 })
 
 
-const menssagem = "E ai o que vai codar hoje ? @samsantosb.bsky.social #bolhadev"
+const menssagem = "E ai o que vai codar hoje ? @samsantosb.bsky.social #bolhadev https://www.horadecodar.dev/"
 
 const rt = new RichText({
     text: menssagem

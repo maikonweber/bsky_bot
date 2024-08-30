@@ -3,6 +3,7 @@ import * as dotenv from 'dotenv';
 import { CronJob } from 'cron';
 import * as process from 'process';
 import { RichText } from '@atproto/api';
+
 dotenv.config();
 
 const user = process.env.BLUESKY_USERNAME;
@@ -11,6 +12,8 @@ const password = process.env.BLUESKY_PASSWORD;
 const agent = new BskyAgent({
     service: 'https://bsky.social',
 });
+
+const repliedPosts = new Set(); // Conjunto para armazenar CIDs dos posts já respondidos
 
 // Função para login
 async function login() {
@@ -33,8 +36,13 @@ async function followAndReplyToBolhaDev() {
 
     for (const post of posts) {
         const postText = post.post.text || ''; // Garantir que postText não seja undefined
+        const postCid = post.post.cid; // Captura o CID do post
 
-        if (postText.toLowerCase().includes('#bolhadev')) {
+        // Verifica se o post contém a hashtag e se ainda não foi respondido
+        if (postText.toLowerCase().includes('#bolhadev') && !repliedPosts.has(postCid)) {
+            // Adiciona o post ao conjunto de posts respondidos
+            repliedPosts.add(postCid);
+
             // Seguir o autor do post
             await agent.follow(post.post.author.did);
 

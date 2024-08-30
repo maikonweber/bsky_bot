@@ -7,6 +7,7 @@ dotenv.config();
 
 const user = process.env.BLUESKY_USERNAME;
 const password = process.env.BLUESKY_PASSWORD;
+const specificFeedDid = 'did:plc:kzbpdq77iuqrf5vvsh5uocqb';
 
 const agent = new BskyAgent({
     service: 'https://bsky.social',
@@ -27,8 +28,8 @@ async function createRichTextMessage(text) {
 // Bot de Postagem Diária
 async function dailyPost() {
     await login();
-
-    const menssagem = "E aí, o que vai codar hoje? @samsantosb.bsky.social #bolhadev";
+    // did:plc:kzbpdq77iuqrf5vvsh5uocqb/feed/aaakgbtfraxaq
+    const menssagem = "E aí, o que vai codar hoje? #bolhadev https://www.horadecodar.dev/";
     const rt = await createRichTextMessage(menssagem);
 
     const postRecord = {
@@ -36,6 +37,8 @@ async function dailyPost() {
         text: rt.text,
         facets: rt.facets,
         createdAt: new Date().toISOString(),
+        // Postando no feed específico usando o `did`
+        feed: specificFeedDid,
     };
 
     await agent.post(postRecord);
@@ -43,6 +46,8 @@ async function dailyPost() {
 }
 
 // Bot de Boas-Vindas para Novos Seguidores
+const knownFollowers = new Set(); // Usando um Set para armazenar seguidores conhecidos
+
 async function welcomeNewFollowers() {
     await login();
 
@@ -50,15 +55,20 @@ async function welcomeNewFollowers() {
     const newFollowers = follower.data.followers;
 
     for (const f of newFollowers) {
-        await agent.follow(f.did);
-        const welcomeMessage = `Obrigado por seguir, ${f.handle}! Fique à vontade para interagir e aprender mais sobre desenvolvimento.`;
-        const rt = await createRichTextMessage(welcomeMessage);
-        await agent.post({
-            $type: 'app.bsky.feed.post',
-            text: rt.text,
-            facets: rt.facets,
-            createdAt: new Date().toISOString(),
-        });
+        if (!knownFollowers.has(f.did)) {  // Verifica se o seguidor já é conhecido
+            knownFollowers.add(f.did);  // Adiciona o novo seguidor ao conjunto
+
+            await agent.follow(f.did);  // Segue o novo seguidor
+            const welcomeMessage = `Obrigado por seguir, ${f.handle}! Fique à vontade para interagir e aprender mais sobre desenvolvimento.`;
+            const rt = await createRichTextMessage(welcomeMessage);
+
+            await agent.post({
+                $type: 'app.bsky.feed.post',
+                text: rt.text,
+                facets: rt.facets,
+                createdAt: new Date().toISOString(),
+            });
+        }
     }
 
     console.log("Welcomed new followers!");
@@ -119,12 +129,15 @@ const scheduleWelcomeFollowers = '*/10 * * * *'; // A cada 10 minutos
 const scheduleWeeklySummary = '0 9 * * 1'; // Toda segunda-feira às 9:00 AM
 const scheduleContentCuration = '0 18 * * 5'; // Toda sexta-feira às 6:00 PM
 
+
 // Cron jobs
 const jobDailyPost = new CronJob(scheduleDailyPost, dailyPost, null, true, 'America/Sao_Paulo');
 const jobWelcomeFollowers = new CronJob(scheduleWelcomeFollowers, welcomeNewFollowers, null, true, 'America/Sao_Paulo');
 const jobWeeklySummary = new CronJob(scheduleWeeklySummary, weeklySummary, null, true, 'America/Sao_Paulo');
 const jobContentCuration = new CronJob(scheduleContentCuration, contentCuration, null, true, 'America/Sao_Paulo');
 
+
+dailyPost().then()
 // Inicia os jobs
 jobDailyPost.start();
 jobWelcomeFollowers.start();
