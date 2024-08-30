@@ -137,7 +137,7 @@ const jobWeeklySummary = new CronJob(scheduleWeeklySummary, weeklySummary, null,
 const jobContentCuration = new CronJob(scheduleContentCuration, contentCuration, null, true, 'America/Sao_Paulo');
 
 
-dailyPost().then()
+
 // Inicia os jobs
 jobDailyPost.start();
 jobWelcomeFollowers.start();
