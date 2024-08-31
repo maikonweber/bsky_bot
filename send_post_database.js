@@ -75,7 +75,6 @@ async function main() {
     };
 
     await agent.post(postRecord);
-    await agent.post(studyT);
 
     console.log("Just posted a daily motivational message!");
 
@@ -91,7 +90,8 @@ async function main() {
 }
 
 
-const scheduleDailyPost = '*/10 * * * *'; // A cada 10 minutos
+const scheduleDailyPost = '0 */5 * * *'; // A cada 5 horas
+
 
 const job = new CronJob(scheduleDailyPost, main, null, true, 'America/Sao_Paulo');
 

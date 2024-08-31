@@ -3,6 +3,8 @@ import * as dotenv from 'dotenv';
 import { CronJob } from 'cron';
 import * as process from 'process';
 import { RichText } from '@atproto/api';
+import db from './database.js'; // Certifique-se de ter configurado o banco de dados corretamente
+
 dotenv.config();
 
 const user = process.env.BLUESKY_USERNAME;
@@ -12,6 +14,35 @@ const specificFeedDid = 'did:plc:kzbpdq77iuqrf5vvsh5uocqb';
 const agent = new BskyAgent({
     service: 'https://bsky.social',
 });
+
+// Função para verificar se o seguidor já está na tabela
+async function isFollowerInDb(did) {
+    const sql = 'SELECT 1 FROM blue_sky_followers WHERE did = $1';
+    const result = await db.query(sql, [did]);
+    return result.rowCount > 0;
+}
+
+// Função para inserir dados no banco
+async function insertFollower(follower) {
+    const sql = `
+        INSERT INTO blue_sky_followers (payload, did, handle)
+        VALUES ($1, $2, $3, $4)
+        ON CONFLICT (did) DO UPDATE
+        SET payload = EXCLUDED.payload,
+            handle = EXCLUDED.handle,
+            created_at = EXCLUDED.created_at
+    `;
+    const values = [
+        JSON.stringify(follower),      // payload
+        follower.did,                  // did
+        follower.handle,               // handle
+    ];
+    try {
+        await db.query(sql, values);
+    } catch (error) {
+        console.error('Erro ao inserir ou atualizar seguidor:', error);
+    }
+}
 
 // Função para login
 async function login() {
@@ -46,17 +77,18 @@ async function dailyPost() {
 }
 
 // Bot de Boas-Vindas para Novos Seguidores
-const knownFollowers = new Set(); // Usando um Set para armazenar seguidores conhecidos
+// const knownFollowers = new Set(); // Usando um Set para armazenar seguidores conhecidos
 
 async function welcomeNewFollowers() {
     await login();
 
-    const follower = await agent.getFollowers({ actor: agent.did });
-    const newFollowers = follower.data.followers;
+    const followerResponse = await agent.getFollowers({ actor: agent.did });
+    const newFollowers = followerResponse.data.followers;
 
     for (const f of newFollowers) {
-        if (!knownFollowers.has(f.did)) {  // Verifica se o seguidor já é conhecido
-            knownFollowers.add(f.did);  // Adiciona o novo seguidor ao conjunto
+        const isInDb = await isFollowerInDb(f.did);
+        if (!isInDb) {  // Verifica se o seguidor já está na tabela
+            await insertFollower(f);  // Adiciona o novo seguidor à tabela
 
             await agent.follow(f.did);  // Segue o novo seguidor
             const welcomeMessage = `Obrigado por seguir, ${f.handle}! Fique à vontade para interagir e aprender mais sobre desenvolvimento.`;
