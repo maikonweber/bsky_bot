@@ -1,7 +1,10 @@
 import OpenAI from "openai";
 
+<<<<<<< HEAD
 
 
+=======
+>>>>>>> 1ef7bc4... stash changes
 async function generateText(prompt) {
     try {
         const response = await openai.chat.completions.create({
