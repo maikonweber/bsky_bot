@@ -26,8 +26,8 @@ async function isFollowerInDb(did) {
 async function insertFollower(follower) {
     const sql = `
         INSERT INTO blue_sky_followers (payload, did, handle)
-        VALUES ($1, $2, $3, $4)
-        ON CONFLICT (did) DO UPDATE
+        VALUES ($1, $2, $3)
+        ON CONFLICT (handle) DO UPDATE
         SET payload = EXCLUDED.payload,
             handle = EXCLUDED.handle,
             created_at = EXCLUDED.created_at
@@ -79,8 +79,8 @@ async function dailyPost() {
 // Bot de Boas-Vindas para Novos Seguidores
 // const knownFollowers = new Set(); // Usando um Set para armazenar seguidores conhecidos
 
-async function welcomeNewFollowers() {
-    await login();
+export async function welcomeNewFollowers(agent) {
+    await login(agent);
 
     const followerResponse = await agent.getFollowers({ actor: agent.did });
     const newFollowers = followerResponse.data.followers;
@@ -91,7 +91,7 @@ async function welcomeNewFollowers() {
             await insertFollower(f);  // Adiciona o novo seguidor à tabela
 
             await agent.follow(f.did);  // Segue o novo seguidor
-            const welcomeMessage = `Obrigado por seguir, ${f.handle}! Fique à vontade para interagir e aprender mais sobre desenvolvimento.`;
+            const welcomeMessage = `Acabei de seguir você, ${f.handle}! Fique à vontade para interagir e aprender mais sobre desenvolvimento.`;
             const rt = await createRichTextMessage(welcomeMessage);
 
             await agent.post({
@@ -107,7 +107,7 @@ async function welcomeNewFollowers() {
 }
 
 // Bot de Resumo de Interações Semanais
-async function weeklySummary() {
+export async function weeklySummary() {
     await login();
 
     const getTimeLine = await agent.getTimeline({ limit: 100 });
@@ -132,7 +132,7 @@ async function weeklySummary() {
 }
 
 // Bot de Curadoria de Conteúdo
-async function contentCuration() {
+export async function contentCuration() {
     await login();
 
     const getTimeLine = await agent.getTimeline({ limit: 100 });
@@ -157,8 +157,8 @@ async function contentCuration() {
 
 // Agendamento dos Bots com Cron
 const scheduleDailyPost = '10 8 * * *'; // Diariamente às 8:10 AM
-const scheduleWelcomeFollowers = '*/10 * * * *'; // A cada 10 minutos
-const scheduleWeeklySummary = '0 9 * * 1'; // Toda segunda-feira às 9:00 AM
+const scheduleWelcomeFollowers = '*/15 * * * *'; // A cada 10 minutos
+const scheduleWeeklySummary = '59 23 * * *'; // Toda segunda-feira às 9:00 AM
 const scheduleContentCuration = '0 18 * * 5'; // Toda sexta-feira às 6:00 PM
 
 
@@ -166,7 +166,7 @@ const scheduleContentCuration = '0 18 * * 5'; // Toda sexta-feira às 6:00 PM
 const jobDailyPost = new CronJob(scheduleDailyPost, dailyPost, null, true, 'America/Sao_Paulo');
 const jobWelcomeFollowers = new CronJob(scheduleWelcomeFollowers, welcomeNewFollowers, null, true, 'America/Sao_Paulo');
 const jobWeeklySummary = new CronJob(scheduleWeeklySummary, weeklySummary, null, true, 'America/Sao_Paulo');
-const jobContentCuration = new CronJob(scheduleContentCuration, contentCuration, null, true, 'America/Sao_Paulo');
+const jobContentCuration = new CronJob(scheduleWeeklySummary, contentCuration, null, true, 'America/Sao_Paulo');
 
 
 

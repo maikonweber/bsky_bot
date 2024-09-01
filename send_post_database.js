@@ -38,7 +38,6 @@ async function main() {
 
     // Executa a consulta para obter as linhas
     const getRows = await db.query(sql);
-
     // Verifica se há algum resultado
     if (getRows.rows.length === 0) {
         console.log('No posts to process.');
@@ -90,7 +89,7 @@ async function main() {
 }
 
 
-const scheduleDailyPost = '0 */5 * * *'; // A cada 5 horas
+const scheduleDailyPost = '0 */4 * * *'; // A cada 5 horas
 
 
 const job = new CronJob(scheduleDailyPost, main, null, true, 'America/Sao_Paulo');

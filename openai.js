@@ -1,10 +1,10 @@
 import OpenAI from "openai";
 
-<<<<<<< HEAD
+
+const ApiKey = process.env.ApiKey;
+const orgId = process.env.orgId;
 
 
-=======
->>>>>>> 1ef7bc4... stash changes
 async function generateText(prompt) {
     try {
         const response = await openai.chat.completions.create({
