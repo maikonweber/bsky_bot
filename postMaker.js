@@ -28,6 +28,8 @@ async function createRichTextMessage(text) {
     await rt.detectFacets(agent);
     return rt;
 }
+
+
 async function main() {
     // Consulta para obter o próximo post a ser enviado
     const sql = `SELECT * FROM blue_sky_phase 
@@ -64,14 +66,6 @@ async function main() {
         feed: specificFeedDid,
     };
 
-    const postRecord2 = {
-        $type: 'app.bsky.feed.post',
-        text: rt.text,
-        facets: rt.facets,
-        createdAt: new Date().toISOString(),
-        // Postando no feed específico usando o `did`
-        feed: studyT,
-    };
 
     await agent.post(postRecord);
 
@@ -89,7 +83,6 @@ async function main() {
 }
 
 
-const scheduleDailyPost = '0 */4 * * *'; // A cada 5 horas
 
 
 const job = new CronJob(scheduleDailyPost, main, null, true, 'America/Sao_Paulo');

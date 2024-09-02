@@ -23,7 +23,7 @@ async function login() {
 // Função para inserir dados no banco
 
 // Função para obter e armazenar seguidores e seguindo
-async function storeFollowersAndFollowing() {
+export async function storeFollowersAndFollowing() {
     await login();
 
     const followersResponse = await agent.getFollowers({ actor: agent.did });

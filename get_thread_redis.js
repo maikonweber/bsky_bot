@@ -1,8 +1,42 @@
 import redisService from './redis.js'; // Serviço Redis conforme definido anteriormente
-import db from './database.js'
+import { isFollowerInHandle } from './lib.js'
+import { Agent, BskyAgent } from '@atproto/api';
+import * as dotenv from 'dotenv';
+import db from './database.js'; // Certifique-se de ter configurado o banco de dados corretamente
+import * as process from 'process';
+import { login } from './lib.js';
+
+dotenv.config();
+
+const user = process.env.BLUESKY_USERNAME;
+const password = process.env.BLUESKY_PASSWORD;
+
+const agent = new BskyAgent({
+    service: 'https://bsky.social',
+});
+
+
+async function LikesFollowesPost(params, agent) {
+    const bool = await isFollowerInHandle(params.authoHandle);
+
+    console.log(bool, params.authoHandle)
+
+    if (bool) {
+        console.log(params)
+        // await agent.like(params.uri, params.cid)
+        return
+    }
+
+    return
+}
+
+
 
 // Função para consumir e processar dados da hash table no Redis
-async function consumirRedisHashTable() {
+export async function consumirRedisHashTable() {
+
+    // await login(agent)
+
     try {
         // Recupera todos os posts armazenados na hash table
         const posts = await redisService.client.hGetAll('timeline:hashtag:RPGTEXTUAL');
@@ -25,12 +59,9 @@ async function consumirRedisHashTable() {
             const cid = p.uri
             const uri = p.cid
 
+            await LikesFollowesPost({ uri, cid, authoHandle, text, curtidas }, agent);
 
 
-            // const filteredPosts = processarPosts(posts, { minLikes: 10, minReposts: 5, regex: /exemplo/, handlesAmigos: ['@amigo'] });
-
-            console.log(filteredPosts)
-            // console.log(p.texto.
         }
 
 

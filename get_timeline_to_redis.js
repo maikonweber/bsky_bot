@@ -38,6 +38,7 @@ export async function adicionarPostNaHashTable(post) {
 
 
 export async function fetchTimeline(params = { limit: 100 }) {
+    await login(agent)
     try {
         const timeline = await agent.getTimeline(params); // Busca os 50 posts mais recentes
         // console.log(timeline)
@@ -91,13 +92,13 @@ async function filterAndStorePostsByHashtag(posts) {
 }
 
 async function main() {
-    await login(); // Realizar login
+    await login(agent); // Realizar login
     const posts = await fetchTimeline(); // Buscar a timeline
     await filterAndStorePostsByHashtag(posts);
 }
 
 
-const scheduleWelcomeFollowers = '*/3 * * * *'; // A cada 10 minutos
+const scheduleWelcomeFollowers = '*/40 * * * *'; // A cada 10 minutos
 
 
 // Cron jobs
